@@ -9,13 +9,13 @@ import org.rejuse.association.OrderedMultiAssociation;
 import org.rejuse.association.SingleAssociation;
 
 import chameleon.core.declaration.Declaration;
+import chameleon.core.declaration.DeclarationWithParametersHeader;
 import chameleon.core.declaration.Signature;
 import chameleon.core.element.Element;
 import chameleon.core.lookup.DeclarationSelector;
 import chameleon.core.lookup.LookupException;
 import chameleon.core.lookup.LookupStrategy;
 import chameleon.core.namespace.NamespaceElement;
-import chameleon.core.namespace.NamespaceElementImpl;
 import chameleon.core.variable.FormalParameter;
 import chameleon.core.variable.VariableContainer;
 import chameleon.exception.ModelException;
@@ -32,7 +32,7 @@ import chameleon.util.Util;
  * @param <P>
  * @param <S>
  */
-public abstract class MethodHeader<E extends MethodHeader, P extends NamespaceElement, S extends MethodSignature> extends NamespaceElementImpl <E,P> implements VariableContainer<E, P> { //extends Signature<E, P> 
+public abstract class MethodHeader<E extends MethodHeader, P extends NamespaceElement, S extends MethodSignature> extends DeclarationWithParametersHeader <E,P,S> implements VariableContainer<E, P> { //extends Signature<E, P> 
   
   public E clone() {
     E result = cloneThis();
