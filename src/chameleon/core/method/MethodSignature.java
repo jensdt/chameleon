@@ -3,7 +3,7 @@ package chameleon.core.method;
 import java.util.Iterator;
 import java.util.List;
 
-import chameleon.core.declaration.Signature;
+import chameleon.core.declaration.DeclarationWithParametersSignature;
 import chameleon.core.lookup.LookupException;
 import chameleon.core.namespace.NamespaceElement;
 import chameleon.core.variable.FormalParameter;
@@ -14,7 +14,7 @@ import chameleon.oo.type.generics.ExtendsConstraint;
 import chameleon.oo.type.generics.FormalTypeParameter;
 import chameleon.oo.type.generics.TypeParameter;
 
-public abstract class MethodSignature<E extends MethodSignature,P extends NamespaceElement> extends Signature<E, P> {
+public abstract class MethodSignature<E extends MethodSignature,P extends NamespaceElement> extends DeclarationWithParametersSignature<E, P> {
 
 //	public String name() {
 //		return _name;

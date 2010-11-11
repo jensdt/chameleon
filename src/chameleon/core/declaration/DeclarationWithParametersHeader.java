@@ -33,7 +33,7 @@ import chameleon.util.Util;
  * @param <P>
  * @param <S>
  */
-public abstract class DeclarationWithParametersHeader<E extends DeclarationWithParametersHeader, P extends NamespaceElement, S extends Signature>
+public abstract class DeclarationWithParametersHeader<E extends DeclarationWithParametersHeader, P extends NamespaceElement, S extends DeclarationWithParametersSignature>
 		extends NamespaceElementImpl<E, P> implements VariableContainer<E, P> { // extends
 																				// Signature<E,
 																				// P>
@@ -119,7 +119,7 @@ public abstract class DeclarationWithParametersHeader<E extends DeclarationWithP
 	  	return _parameters.elementAt(index);
 	  }
 
-	  private OrderedMultiAssociation<MethodHeader,FormalParameter> _parameters = new OrderedMultiAssociation<MethodHeader,FormalParameter>(this);
+	  private OrderedMultiAssociation<DeclarationWithParametersHeader,FormalParameter> _parameters = new OrderedMultiAssociation<DeclarationWithParametersHeader,FormalParameter>(this);
 	  
 	  /**
 	   * Return the type of the formal parameters of this signature.
@@ -232,7 +232,7 @@ public abstract class DeclarationWithParametersHeader<E extends DeclarationWithP
 //	  	return language().lookupFactory().createLexicalLookupStrategy(language().lookupFactory().createLocalLookupStrategy(this),this);
 	//  }
 	  
-		private SingleAssociation<MethodHeader, TypeParameterBlock> _typeParameters = new SingleAssociation<MethodHeader, TypeParameterBlock>(this);
+		private SingleAssociation<DeclarationWithParametersHeader, TypeParameterBlock> _typeParameters = new SingleAssociation<DeclarationWithParametersHeader, TypeParameterBlock>(this);
 		
 		public TypeParameterBlock parameterBlock() {
 			return _typeParameters.getOtherEnd();
