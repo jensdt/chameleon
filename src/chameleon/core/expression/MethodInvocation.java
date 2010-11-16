@@ -32,9 +32,9 @@ import chameleon.util.Util;
  * @param <D> The type of declaration invoked by this invocation.
  */
 
-public abstract class Invocation<E extends Invocation<E,D>,D extends Method> extends TargetedExpression<E> implements CrossReference<E,Element,D> {
+public abstract class MethodInvocation<E extends MethodInvocation<E,D>,D extends Method> extends TargetedExpression<E> implements CrossReference<E,Element,D> {
 
-  public Invocation(InvocationTarget target) {
+  public MethodInvocation(InvocationTarget target) {
 	  setTarget(target);
   }
   
@@ -53,7 +53,7 @@ public abstract class Invocation<E extends Invocation<E,D>,D extends Method> ext
 	/**
 	 * TARGET
 	 */
-	private SingleAssociation<Invocation,InvocationTarget> _target = new SingleAssociation<Invocation,InvocationTarget>(this);
+	private SingleAssociation<MethodInvocation,InvocationTarget> _target = new SingleAssociation<MethodInvocation,InvocationTarget>(this);
 
 
   public InvocationTarget getTarget() {
@@ -74,7 +74,7 @@ public abstract class Invocation<E extends Invocation<E,D>,D extends Method> ext
 	/*********************
 	 * ACTUAL PARAMETERS *
 	 *********************/
-  private OrderedMultiAssociation<Invocation,Expression> _parameters = new OrderedMultiAssociation<Invocation,Expression>(this);
+  private OrderedMultiAssociation<MethodInvocation,Expression> _parameters = new OrderedMultiAssociation<MethodInvocation,Expression>(this);
  
   public void addArgument(Expression parameter) {
   	setAsParent(_parameters, parameter);
@@ -327,7 +327,7 @@ public abstract class Invocation<E extends Invocation<E,D>,D extends Method> ext
   	}
   }
   
-  private OrderedMultiAssociation<Invocation,ActualTypeArgument> _genericParameters = new OrderedMultiAssociation<Invocation, ActualTypeArgument>(this);
+  private OrderedMultiAssociation<MethodInvocation,ActualTypeArgument> _genericParameters = new OrderedMultiAssociation<MethodInvocation, ActualTypeArgument>(this);
 
 	@Override
 	public VerificationResult verifySelf() {
