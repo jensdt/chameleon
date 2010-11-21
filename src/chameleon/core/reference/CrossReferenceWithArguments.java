@@ -292,10 +292,6 @@ public class CrossReferenceWithArguments<E extends CrossReferenceWithArguments<E
 		}
 	}
 
-	// public D getMethod() throws LookupException {
-	// return getElement();
-	// }
-
 	public E clone() {
 		InvocationTarget target = null;
 		if (getTarget() != null) {
@@ -343,6 +339,8 @@ public class CrossReferenceWithArguments<E extends CrossReferenceWithArguments<E
 
 	private OrderedMultiAssociation<CrossReferenceWithArguments, ActualTypeArgument> _genericParameters = new OrderedMultiAssociation<CrossReferenceWithArguments, ActualTypeArgument>(
 			this);
+	
+	
 
 	@Override
 	public VerificationResult verifySelf() {

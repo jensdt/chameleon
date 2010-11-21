@@ -24,12 +24,12 @@ public abstract class NonConstructorInvocation<E extends NonConstructorInvocatio
 
   public Type actualType() throws LookupException {
 	    try {
-				Method method = getMethod();
+				Method method = getElement();
 				if (method != null) {
 				  return method.returnType();
 				}
 				else {
-				  getMethod();
+					getElement();
 				  throw new LookupException("Could not find method of constructor invocation", this);
 				}
 			} catch (LookupException e) {

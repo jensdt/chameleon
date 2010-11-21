@@ -8,12 +8,15 @@ import java.util.Set;
 import org.rejuse.association.OrderedMultiAssociation;
 import org.rejuse.association.SingleAssociation;
 
+import com.sun.org.apache.xml.internal.security.encryption.Reference;
+
 import chameleon.core.Config;
 import chameleon.core.declaration.Declaration;
 import chameleon.core.element.Element;
 import chameleon.core.lookup.DeclarationSelector;
 import chameleon.core.lookup.DeclaratorSelector;
 import chameleon.core.lookup.LookupException;
+import chameleon.core.lookup.LookupStrategy;
 import chameleon.core.method.Method;
 import chameleon.core.reference.CrossReference;
 import chameleon.core.reference.CrossReferenceWithArguments;
@@ -91,51 +94,8 @@ public abstract class MethodInvocation<E extends MethodInvocation<E,D>,D extends
   }
   
   public List<Type> getActualParameterTypes() throws LookupException {
-	    List<Expression> params = getActualParameters();
-	    final List<Type> result = new ArrayList<Type>();
-	    for(Expression param:params) {
-        Type type = param.getType();
-        if (type != null) {
-      	  result.add(type);
-        }
-        else {
-          //Type ttt = ((ActualParameter)param).getType(); //DEBUG
-          throw new LookupException("Cannot determine type of expression");
-        }
-	    }
-	    return result;
+	  return crossReference().getActualParameterTypes();
 	}
-
- /*@
-   @ also public behavior 
-   @
-   @ post \result.containsAll(getMethod().getExceptionClause().getExceptionTypes(this));
-   @ post (getLanguage().getUncheckedException(getPackage().getDefaultPackage()) != null) ==>
-   @      result.contains(getLanguage().getUncheckedException(getPackage().getDefaultPackage());
-   @*/  
-  public Set getMethodExceptions() throws LookupException {
-    Set result = getMethod().getExceptionClause().getExceptionTypes(this);
-    Type rte = language(ObjectOrientedLanguage.class).getUncheckedException();
-    if (rte != null) {
-      result.add(rte);
-    }
-    return result;
-  }
-  
- /*@
-   @ also public behavior 
-   @
-   @ post \result.containsAll(getMethodExceptions());
-   @ post (getLanguage().getNullInvocationException(getPackage().getDefaultPackage()) != null) ==>
-   @      result.contains(getLanguage().getNullInvocationException(getPackage().getDefaultPackage());
-   @*/  
-  public Set getDirectExceptions() throws LookupException {
-    Set result = getMethodExceptions();
-    if(getTarget() != null) {
-      Util.addNonNull(language(ObjectOrientedLanguage.class).getNullInvocationException(), result);
-    }
-    return result;
-  }
   
  /*@
    @ also public behavior
@@ -145,7 +105,6 @@ public abstract class MethodInvocation<E extends MethodInvocation<E,D>,D extends
    @*/  
   public List<Element> children() {
     List<Element> result = new ArrayList<Element>();
-    result.addAll(typeArguments());
     Util.addNonNull(crossReference(), result);
     return result;
   }
@@ -166,37 +125,25 @@ public abstract class MethodInvocation<E extends MethodInvocation<E,D>,D extends
 
   
   public D getElement() throws LookupException {
-  	return getElement(selector());
+	 return (D) crossReference().getElement();
   }
   
 	public Declaration getDeclarator() throws LookupException {
-		return getElement(new DeclaratorSelector(selector()));
+		return crossReference().getDeclarator();
 	}
-	
-  private SoftReference<D> _cache;
   
   @Override
   public void flushLocalCache() {
   	super.flushLocalCache();
-  	_cache = null;
+  	crossReference().flushLocalCache();
   }
   
   protected D getCache() {
-  	D result = null;
-  	if(Config.cacheElementReferences() == true) {
-  	  result = (_cache == null ? null : _cache.get());
-  	}
-  	return result;
+	return  (D) crossReference().getCache();
   }
   
   protected void setCache(D value) {
-//  	if(! value.isDerived()) {
-    	if(Config.cacheElementReferences() == true) {
-    		_cache = new SoftReference<D>(value);
-    	}
-//  	} else {
-//  		_cache = null;
-//  	}
+	  crossReference().setCache(value);
   }
 
 
@@ -212,45 +159,42 @@ public abstract class MethodInvocation<E extends MethodInvocation<E,D>,D extends
 	 @*/
 //	public abstract D getMethod() throws MetamodelException;
   public <X extends Declaration> X getElement(DeclarationSelector<X> selector) throws LookupException {
-  	X result = null;
-  	
-  	//OPTIMISATION
-  	boolean cache = selector.equals(selector());
-  	if(cache) {
-  		result = (X) getCache();
-  	}
-	  if(result != null) {
-	   	return result;
-	  }
-	   
-  	InvocationTarget target = getTarget();
-  	if(target == null) {
-      result = lexicalLookupStrategy().lookUp(selector);
-  	} else {
-  		result = target.targetContext().lookUp(selector);
-  	}
-		if (result != null) {
-	  	//OPTIMISATION
-	  	if(cache) {
-	  		setCache((D) result);
-	  	}
-	    return result;
+	  X result = null;
+
+		// OPTIMISATION
+		boolean cache = selector.equals(selector());
+		if (cache) {
+			result = (X) getCache();
 		}
-		else {
-			//repeat lookup for debugging purposes.
-			//Config.setCaching(false);
-	  	if(target == null) {
-	      result = lexicalLookupStrategy().lookUp(selector);
-	  	} else {
-	  		result = target.targetContext().lookUp(selector);
-	  	}
-			throw new LookupException("Method returned by invocation is null", this);
+		if (result != null) {
+			return result;
+		}
+
+		InvocationTarget target = getTarget();
+		if (target == null) {
+			result = lexicalLookupStrategy().lookUp(selector);
+		} else {
+			result = target.targetContext().lookUp(selector);
+		}
+		if (result != null) {
+			// OPTIMISATION
+			if (cache) {
+				setCache((D) result);
+			}
+			return result;
+		} else {
+			// repeat lookup for debugging purposes.
+			// Config.setCaching(false);
+			if (target == null) {
+				result = lexicalLookupStrategy().lookUp(selector);
+			} else {
+				result = target.targetContext().lookUp(selector);
+			}
+			throw new LookupException("Method returned by invocation is null"
+					);
 		}
   }
 
-  public D getMethod() throws LookupException {
-  	return getElement();
-  }
   
   /**
    * Return a clone of this invocation without target or parameters.
@@ -318,6 +262,4 @@ public abstract class MethodInvocation<E extends MethodInvocation<E,D>,D extends
 		}
 		return result;
 	}
-
-  
 }
