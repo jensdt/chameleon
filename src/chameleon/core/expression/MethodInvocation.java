@@ -7,7 +7,6 @@ import java.util.Set;
 
 import org.rejuse.association.OrderedMultiAssociation;
 import org.rejuse.association.SingleAssociation;
-import org.rejuse.java.collections.Visitor;
 
 import chameleon.core.Config;
 import chameleon.core.declaration.Declaration;
@@ -17,6 +16,7 @@ import chameleon.core.lookup.DeclaratorSelector;
 import chameleon.core.lookup.LookupException;
 import chameleon.core.method.Method;
 import chameleon.core.reference.CrossReference;
+import chameleon.core.reference.CrossReferenceWithArguments;
 import chameleon.core.reference.UnresolvableCrossReference;
 import chameleon.core.statement.CheckedExceptionList;
 import chameleon.core.validation.Valid;
@@ -34,7 +34,10 @@ import chameleon.util.Util;
 
 public abstract class MethodInvocation<E extends MethodInvocation<E,D>,D extends Method> extends TargetedExpression<E> implements CrossReference<E,Element,D> {
 
+	private SingleAssociation<MethodInvocation<E, D>, CrossReferenceWithArguments> _crossReference = new SingleAssociation<MethodInvocation<E, D>, CrossReferenceWithArguments>(this);
+	
   public MethodInvocation(InvocationTarget target) {
+	  setAsParent(_crossReference, new CrossReferenceWithArguments());
 	  setTarget(target);
   }
   
@@ -46,52 +49,36 @@ public abstract class MethodInvocation<E extends MethodInvocation<E,D>,D extends
     return _selector;
   }
   
+  protected CrossReferenceWithArguments crossReference() {
+	  return _crossReference.getOtherEnd();
+  }
+  
   protected abstract DeclarationSelector<D> createSelector() throws LookupException;
   
   protected DeclarationSelector<D> _selector;
   
-	/**
-	 * TARGET
-	 */
-	private SingleAssociation<MethodInvocation,InvocationTarget> _target = new SingleAssociation<MethodInvocation,InvocationTarget>(this);
-
-
   public InvocationTarget getTarget() {
-    return _target.getOtherEnd();
+    return crossReference().getTarget();
   }
 
   public void setTarget(InvocationTarget target) {
-    if (target != null) {
-      _target.connectTo(target.parentLink());
-    }
-    else {
-      _target.connectTo(null);
-    }
+	  crossReference().setTarget(target);
   }
 
- 
-  
-	/*********************
-	 * ACTUAL PARAMETERS *
-	 *********************/
-  private OrderedMultiAssociation<MethodInvocation,Expression> _parameters = new OrderedMultiAssociation<MethodInvocation,Expression>(this);
- 
   public void addArgument(Expression parameter) {
-  	setAsParent(_parameters, parameter);
+	  crossReference().addArgument(parameter);
   }
   
   public void addAllArguments(List<Expression> parameters) {
-  	for(Expression parameter: parameters) {
-  		addArgument(parameter);
-  	}
+	  crossReference().addAllArguments(parameters);
   }
 
   public void removeParameter(Expression parameter) {
-  	_parameters.remove(parameter.parentLink());
+	  crossReference().removeParameter(parameter);
   }
 
   public List<Expression> getActualParameters() {
-    return _parameters.getOtherEnds();
+	  return crossReference().getActualParameters();
   }
 
  /*@
@@ -100,7 +87,7 @@ public abstract class MethodInvocation<E extends MethodInvocation<E,D>,D extends
    @ post \result == getActualParameters().size;
    @*/
   public int nbActualParameters() {
-  	return _parameters.size();
+  	return crossReference().nbActualParameters();
   }
   
   public List<Type> getActualParameterTypes() throws LookupException {
@@ -158,9 +145,8 @@ public abstract class MethodInvocation<E extends MethodInvocation<E,D>,D extends
    @*/  
   public List<Element> children() {
     List<Element> result = new ArrayList<Element>();
-    result.addAll(getActualParameters());
     result.addAll(typeArguments());
-    Util.addNonNull(getTarget(), result);
+    Util.addNonNull(crossReference(), result);
     return result;
   }
 
@@ -306,29 +292,20 @@ public abstract class MethodInvocation<E extends MethodInvocation<E,D>,D extends
   }
   
   public List<ActualTypeArgument> typeArguments() {
-  	return _genericParameters.getOtherEnds();
+  	return crossReference().typeArguments();
   }
   
   public void addArgument(ActualTypeArgument arg) {
-  	if(arg != null) {
-  		_genericParameters.add(arg.parentLink());
-  	}
+	  crossReference().addArgument(arg);
   }
   
   public void addAllTypeArguments(List<ActualTypeArgument> args) {
-  	for(ActualTypeArgument argument : args) {
-  		addArgument(argument);
-  	}
+	  crossReference().addAllTypeArguments(args);
   }
   
   public void removeArgument(ActualTypeArgument arg) {
-  	if(arg != null) {
-  		_genericParameters.remove(arg.parentLink());
-  	}
+	  crossReference().removeArgument(arg);
   }
-  
-  private OrderedMultiAssociation<MethodInvocation,ActualTypeArgument> _genericParameters = new OrderedMultiAssociation<MethodInvocation, ActualTypeArgument>(this);
-
 	@Override
 	public VerificationResult verifySelf() {
 		VerificationResult result = Valid.create();
