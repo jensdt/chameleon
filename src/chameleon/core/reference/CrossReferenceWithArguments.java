@@ -348,13 +348,13 @@ public class CrossReferenceWithArguments<E extends CrossReferenceWithArguments<E
 	@Override
 	public VerificationResult verifySelf() {
 		VerificationResult result = Valid.create();
-		// try {
-		// if (getElement() == null) {
-		// result = result.and(new UnresolvableCrossReference(this));
-		// }
-		// } catch (LookupException e) {
-		// result = result.and(new UnresolvableCrossReference(this));
-		// }
+//		 try {
+//		 if (getElement() == null) {
+//		 result = result.and(new UnresolvableCrossReference(this));
+//		 }
+//		 } catch (LookupException e) {
+//		 result = result.and(new UnresolvableCrossReference(this));
+//		 }
 		return result;
 	}
 
