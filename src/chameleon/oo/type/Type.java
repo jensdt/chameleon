@@ -324,6 +324,8 @@ AspectOrType<Type,Type> {
 	 */
 	public List<? extends TypeElement> directlyDeclaredElements();
 
+	public <T extends TypeElement> List<T> directlyDeclaredElements(Class<T> kind);
+	
 	/********************
 	 * EXCEPTION SOURCE *
 	 ********************/
@@ -366,5 +368,9 @@ AspectOrType<Type,Type> {
 	
 	public Type upperBound() throws LookupException;
 
-	public <D extends Member> List<D> membersOverriddenBy(MemberRelationSelector<D> selector) throws LookupException;
+	public <D extends Member> List<D> membersDirectlyOverriddenBy(MemberRelationSelector<D> selector) throws LookupException;
+	
+	public <D extends Member> List<D> membersDirectlyAliasedBy(MemberRelationSelector<D> selector) throws LookupException;
+	
+	public <D extends Member> List<D> membersDirectlyAliasing(MemberRelationSelector<D> selector) throws LookupException;
 }

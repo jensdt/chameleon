@@ -1,10 +1,10 @@
 package chameleon.core.member;
 
+import java.util.List;
 import java.util.Set;
 
 import chameleon.core.declaration.Declaration;
 import chameleon.core.declaration.Signature;
-import chameleon.core.element.Element;
 import chameleon.core.lookup.LookupException;
 import chameleon.oo.type.TypeElement;
 
@@ -41,11 +41,21 @@ public interface Member<E extends Member<E,S,F>, S extends Signature, F extends 
    @*/
   public boolean overrides(Member other) throws LookupException;
   
+//  public boolean canOverride(Member other) throws LookupException;
+//
+//  public OverridesRelation<? extends Member> overridesRelation();
+  
   /**
    * Return a selector that selects members that could override this
    * member based on the signature and other properties.
    */
   public MemberRelationSelector<? extends Member> overridesSelector();
+  
+  /**
+   * Return a selector that selects members that could override this
+   * member based on the signature and other properties.
+   */
+  public MemberRelationSelector<? extends Member> aliasSelector();
   
   /**
    * Check whether this member overrides the given member.
@@ -89,6 +99,15 @@ public interface Member<E extends Member<E,S,F>, S extends Signature, F extends 
    @ post \result != null;
    @ (\forall Member m; \result.contains(m); overrides(m));
    @*/
-  public Set<Member> directlyOverriddenMembers() throws LookupException;
+  public List<? extends Member> directlyOverriddenMembers() throws LookupException;
 
+  public List<? extends Member> directlyAliasedMembers() throws LookupException;
+  
+  public List<? extends Member> directlyAliasingMembers() throws LookupException;
+
+  public Set<? extends Member> overriddenMembers() throws LookupException;
+
+  public Set<? extends Member> aliasedMembers() throws LookupException;
+
+  public Set<? extends Member> aliasingMembers() throws LookupException;
 }

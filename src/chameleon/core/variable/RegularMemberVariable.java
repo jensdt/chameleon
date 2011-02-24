@@ -1,22 +1,20 @@
 package chameleon.core.variable;
 
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.rejuse.predicate.AbstractPredicate;
 
 import chameleon.core.declaration.Signature;
 import chameleon.core.declaration.SimpleNameSignature;
 import chameleon.core.element.Element;
 import chameleon.core.expression.Expression;
 import chameleon.core.lookup.LookupException;
+import chameleon.core.member.DeclarationComparator;
 import chameleon.core.member.HidesRelation;
 import chameleon.core.member.Member;
+import chameleon.core.member.MemberRelationSelector;
 import chameleon.core.member.OverridesRelation;
-import chameleon.core.member.OverridesRelationSelector;
 import chameleon.core.property.ChameleonProperty;
 import chameleon.core.relation.StrictPartialOrder;
 import chameleon.core.scope.Scope;
@@ -105,34 +103,50 @@ public class RegularMemberVariable extends RegularVariable<RegularMemberVariable
     return Util.<Member>createSingletonList(this);
   }
 
-  public Set<Member> directlyOverriddenMembers() throws LookupException {
-    List<Type> superTypes = nearestAncestor(Type.class).getDirectSuperTypes();
-    // Collect the overridden members in the following set.
-    final Set<Member> result = new HashSet<Member>();
-    // Iterate over all super types.
-    for(Type type: superTypes) {
-      // Fetch all members from the current super type.
-      Collection superMembers = type.members(Member.class);
-      // Retain only those members that are overridden by this member. 
-      try {
-        new AbstractPredicate<Member>() {
-          public boolean eval(Member o) throws LookupException {
-            return overrides(o);
-          }
-        }.filter(superMembers);
-      } catch(LookupException e) {
-        throw e; 
-      } catch (Exception e) {
-        e.printStackTrace();
-        throw new Error();
-      }
-      result.addAll(superMembers);
-    }
-    return result;
+//  public Set<Member> directlyOverriddenMembers() throws LookupException {
+//    List<Type> superTypes = nearestAncestor(Type.class).getDirectSuperTypes();
+//    // Collect the overridden members in the following set.
+//    final Set<Member> result = new HashSet<Member>();
+//    // Iterate over all super types.
+//    for(Type type: superTypes) {
+//      // Fetch all members from the current super type.
+//      Collection superMembers = type.members(Member.class);
+//      // Retain only those members that are overridden by this member. 
+//      try {
+//        new AbstractPredicate<Member>() {
+//          public boolean eval(Member o) throws LookupException {
+//            return overrides(o);
+//          }
+//        }.filter(superMembers);
+//      } catch(LookupException e) {
+//        throw e; 
+//      } catch (Exception e) {
+//        e.printStackTrace();
+//        throw new Error();
+//      }
+//      result.addAll(superMembers);
+//    }
+//    return result;
+//  }
+
+  public List<? extends Member> directlyOverriddenMembers() throws LookupException {
+    return nearestAncestor(Type.class).membersDirectlyOverriddenBy(overridesSelector());
   }
 
+  public List<? extends Member> directlyAliasedMembers() throws LookupException {
+    return nearestAncestor(Type.class).membersDirectlyAliasedBy(aliasSelector());
+  }
+
+  public List<? extends Member> directlyAliasingMembers() throws LookupException {
+    return nearestAncestor(Type.class).membersDirectlyAliasing(aliasSelector());
+  }
+  
   public boolean overrides(Member other) throws LookupException {
   	return overridesSelector().selects(other);
+  }
+
+  public final boolean canOverride(Member other) throws LookupException {
+  	return overridesRelation().contains(this, other);
   }
 
   public boolean canImplement(Member other) throws LookupException {
@@ -165,8 +179,12 @@ public class RegularMemberVariable extends RegularVariable<RegularMemberVariable
 		return this;
 	}
 
-  public OverridesRelationSelector<? extends Member> overridesSelector() {
-		return new OverridesRelationSelector<MemberVariable>(MemberVariable.class,this,_overridesSelector);
+  public MemberRelationSelector<? extends Member> overridesSelector() {
+		return new MemberRelationSelector<MemberVariable>(MemberVariable.class,this,_overridesSelector);
+  }
+  
+  public OverridesRelation<MemberVariable> overridesRelation() {
+  	return _overridesSelector;
   }
   
   private static OverridesRelation<MemberVariable> _overridesSelector = new OverridesRelation<MemberVariable>(MemberVariable.class) {
@@ -198,4 +216,61 @@ public class RegularMemberVariable extends RegularVariable<RegularMemberVariable
 			return true;
 		}
 	};
+	
+  public Set<? extends Member> overriddenMembers() throws LookupException {
+  	List<? extends Member> todo = directlyOverriddenMembers();
+  	Set<Member> result = new HashSet<Member>();
+  	while(! todo.isEmpty()) {
+  		Member m = todo.get(0);
+  		todo.remove(0);
+  		if(result.add(m)) {
+  			todo.addAll(m.overriddenMembers());
+  		}
+  	}
+  	return result;
+  }
+
+  public MemberRelationSelector<? extends Member> aliasSelector() {
+		return new MemberRelationSelector<Member>(Member.class,this,_aliasSelector);
+  }
+	
+  private static DeclarationComparator<Member> _aliasSelector = new DeclarationComparator<Member>(Member.class) {
+		
+		public boolean containsBasedOnRest(Member first, Member second) throws LookupException {
+			return first.signature().sameAs(second.signature());
+		}
+
+		@Override
+		public boolean containsBasedOnName(Signature first, Signature second) {
+			return true;
+		}
+	};
+
+	  public Set<? extends Member> aliasedMembers() throws LookupException {
+		  List<Member> todo = (List<Member>) directlyAliasedMembers();
+		  Set<Member> result = new HashSet<Member>();
+		  while(! todo.isEmpty()) {
+			  Member<?,?,?> m = todo.get(0);
+			  todo.remove(0);
+			  if(result.add(m)) {
+				  todo.addAll(m.directlyAliasedMembers());
+			  }
+		  }
+		  return result;
+	  }
+
+	  public Set<? extends Member> aliasingMembers() throws LookupException {
+		  List<Member> todo = (List<Member>) directlyAliasingMembers();
+		  Set<Member> result = new HashSet<Member>();
+		  while(! todo.isEmpty()) {
+			  Member<?,?,?> m = todo.get(0);
+			  todo.remove(0);
+			  if(result.add(m)) {
+				  todo.addAll(m.directlyAliasingMembers());
+			  }
+		  }
+		  return result;
+	  }
+
+  
 }

@@ -148,7 +148,8 @@ public interface Element<E extends Element> {
     public List<Element> ancestors();
 
     /**
-     * Return a list of all ancestors of the given type.
+     * Return a list of all ancestors of the given type. A closer ancestors will have a lower index than a 
+     * farther ancestor.
      */
    /*@
      @ public behavior
@@ -158,6 +159,20 @@ public interface Element<E extends Element> {
      @ post parent() != null ==> \result.subList(1,\result.size()).equals(parent().ancestors(c));
      @*/
     public <T extends Element<?>> List<T> ancestors(Class<T> c);
+    
+    /**
+     * Return a list of all ancestors of the given type that satify the given predicate. 
+     * A closer ancestors will have a lower index than a farther ancestor.
+     */
+   /*@
+     @ public behavior
+     @
+     @ post parent() == null ==> \result.isEmpty();
+     @ post parent() != null && c.isInstance(parent()) && predicate.eval(parent()) ==> \result.get(0) == parent();
+     @ post parent() != null ==> \result.subList(1,\result.size()).equals(parent().ancestors(c));
+     @*/
+    public <T extends Element<?>> List<T> ancestors(Class<T> c, SafePredicate<T> predicate);
+
     
     /**
      * Return the direct children of this element.
@@ -679,6 +694,11 @@ public interface Element<E extends Element> {
     /**
      * DO NOT USE THIS METHOD UNLESS YOU REALLY KNOW WHAT YOU ARE DOING!!!
      * 
+     * Create a undirectional parent association to the given element. If the given parent is not null,
+     * the parentLink() association object will be set to null and a unidirectional reference to the
+     * given parent is used. If the given parent is null, then the parentLink() association will be restored
+     * but it will of course not yet reference any element. 
+     *
      * This method is used internally for generated elements. They are not part
      * of the model, but need a parent in order to have a context. Unfortunately,
      * Java does not allow me to hide the method.
@@ -689,6 +709,8 @@ public interface Element<E extends Element> {
      @ public behavior
      @
      @ post parent() == parent;
+     @ post parent == null ==> parentLink() != null;
+     @ post parent != null ==> parentLink() == null;
      @*/
     public void setUniParent(Element parent);
     

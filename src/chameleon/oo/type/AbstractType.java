@@ -590,7 +590,13 @@ public abstract class AbstractType extends FixedSignatureMember<Type,SimpleNameS
 
     public abstract List<? extends TypeElement> directlyDeclaredElements();
 
-    public CheckedExceptionList getCEL() throws LookupException {
+  	public <T extends TypeElement> List<T> directlyDeclaredElements(Class<T> kind) {
+    	List<TypeElement> tmp = (List<TypeElement>) directlyDeclaredElements();
+    	new TypePredicate<TypeElement,T>(kind).filter(tmp);
+      return (List<T>)tmp;
+  	}
+
+  	public CheckedExceptionList getCEL() throws LookupException {
         CheckedExceptionList cel = new CheckedExceptionList();
         for(TypeElement el : localMembers()) {
         	cel.absorb(el.getCEL());
@@ -770,16 +776,32 @@ public abstract class AbstractType extends FixedSignatureMember<Type,SimpleNameS
 		}
 
 		@Override
-		public <D extends Member> List<D> membersOverriddenBy(MemberRelationSelector<D> selector) throws LookupException {
+		public <D extends Member> List<D> membersDirectlyOverriddenBy(MemberRelationSelector<D> selector) throws LookupException {
 			List<D> result = new ArrayList<D>();
-			for(InheritanceRelation relation:inheritanceRelations()) {
-				result.addAll(relation.membersOverriddenBy(selector));
+			if(!selector.declaration().ancestors().contains(this)) {
+				result.addAll(members(selector));
+			} else {
+				for(InheritanceRelation relation:inheritanceRelations()) {
+					result.addAll(relation.membersDirectlyOverriddenBy(selector));
+				}
 			}
-			result.addAll(members(selector));
 			return result;
 		}
 		
-	  public HidesRelation<? extends Member> hidesSelector() {
+		public <D extends Member> List<D> membersDirectlyAliasedBy(MemberRelationSelector<D> selector) throws LookupException {
+			List<D> result = new ArrayList<D>();
+			for(InheritanceRelation relation:inheritanceRelations()) {
+				result.addAll(relation.membersDirectlyAliasedBy(selector));
+			}
+			return result;
+		}
+		
+		public <D extends Member> List<D> membersDirectlyAliasing(MemberRelationSelector<D> selector) throws LookupException {
+			List<D> result = new ArrayList<D>();
+			return result;
+		}
+		
+	  public HidesRelation<? extends Member> hidesRelation() {
 			return _hidesSelector;
 	  }
 	  
@@ -792,6 +814,10 @@ public abstract class AbstractType extends FixedSignatureMember<Type,SimpleNameS
 				return true;
 			}
 		};
+		
+		public String toString() {
+			return getFullyQualifiedName();
+		}
 
 }
 
